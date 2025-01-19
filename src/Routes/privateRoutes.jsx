@@ -1,6 +1,6 @@
 import Dashboard from '../Components/pages/Dashboard';
 import LearningPath from '../Components/pages/LearningPath';
-import MockInterview from '../Components/pages/MockInterview';
+import MockInterview from '../Components/pages/Mockinterview';
 import PortfolioBuilder from '../Components/pages/PortfolioBuilder';
 import Redeem from '../Components/pages/Redeem';
 
