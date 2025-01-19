@@ -1,30 +1,41 @@
-import React from 'react'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import Dashboard from './Components/Dashboard'
-import LearningPath from './Components/learningPath'
-import MockInterview from './Components/mockinterview'
-import PortfolioBuilder from './Components/portfolioBuilder'
-import Redeem from './Components/redeem'
-import Navbar from './Components/navbar'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { Layout } from './Components/layout/Layout';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { publicRoutes } from './routes/publicRoutes';
+import { privateRoutes } from './routes/privateRoutes';
 
 function App() {
-
   return (
-    <Router>
-      <Navbar />
-      <div className="container">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/learning-path" element={<LearningPath />} />
-          <Route path="/mock-interview" element={<MockInterview />} />
-          <Route path="/portfolio-builder" element={<PortfolioBuilder />} />
-          <Route path="/redeem" element={<Redeem />} />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Layout>
+          <Routes>
+            {publicRoutes.map(({ path, component: Component }) => (
+              <Route
+                key={path}
+                path={path}
+                element={<Component />}
+              />
+            ))}
 
-  )
+            {privateRoutes.map(({ path, component: Component }) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute>
+                    <Component />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+          </Routes>
+        </Layout>
+      </Router>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;

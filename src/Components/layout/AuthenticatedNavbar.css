@@ -6,7 +6,7 @@ html {
 }
 
 .navbar {
-    background-color: #4CAF50;
+    background-color: #4682B4;
     width: 100%;
     height: 60px;
     display: flex;
@@ -48,17 +48,11 @@ html {
     color: #FFD700;
 }
 
-.sign-in-button {
-    background-color: white;
-    color: #4CAF50;
-    border: none;
-    padding: 0.5rem 1rem;
-    margin-right: 50px;
-    border-radius: 4px;
-    font-weight: bold;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease;
+.profile {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .sign-in-button:hover {
