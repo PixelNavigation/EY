@@ -46,8 +46,8 @@ const Login = () => {
                 withCredentials: true,
             });
             localStorage.setItem("token", response.data.token);
-            login(response.data.user); // Pass user data to login
-            navigate("/authenticated");
+            login(response.data.user);
+            navigate("/");
         } catch (err) {
             setError(err.response?.data?.message || "Login failed");
         }

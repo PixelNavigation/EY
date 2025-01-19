@@ -6,7 +6,7 @@ import Redeem from '../components/pages/Redeem';
 
 export const privateRoutes = [
     {
-        path: '/',
+        path: '/dashboard', // Ensure this path is correct and matches the redirect path
         component: Dashboard,
     },
     {
