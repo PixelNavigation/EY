@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './AuthenticatedNavbar.css';
 
-export const AuthenticatedNavbar = () => {
+const AuthenticatedNavbar = () => {
     const { userProfile, logout } = useAuth();
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    const toggleDropdown = () => {
+        setIsDropdownOpen(!isDropdownOpen);
+    };
 
     return (
         <nav className="Auth-navbar">
-            <Link to="/">
+            <Link to="/" className="Auth-logo">
                 <img src="/logo.png" alt="Logo" className="Auth-logo" />
             </Link>
             <ul>
@@ -23,14 +28,21 @@ export const AuthenticatedNavbar = () => {
                     src={userProfile?.photoURL || "/default-avatar.png"}
                     alt="Profile"
                     className="Auth-profile"
+                    onClick={toggleDropdown}
                 />
-                <button
-                    onClick={logout}
-                    className="Auth-sign-out-button"
-                >
-                    Sign Out
-                </button>
+                {isDropdownOpen && (
+                    <div className="Auth-dropdown-menu">
+                        <button onClick={() => { }}>
+                            Profile
+                        </button>
+                        <button onClick={logout}>
+                            Sign Out
+                        </button>
+                    </div>
+                )}
             </div>
         </nav>
     );
 };
+
+export { AuthenticatedNavbar };
