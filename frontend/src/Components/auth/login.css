@@ -4,7 +4,7 @@
     box-sizing: border-box;
 }
 
-body {
+body.login-page {
     font-family: 'Montserrat', sans-serif;
     background: #f6f5f7;
     display: flex;
@@ -14,14 +14,14 @@ body {
     margin: 0;
 }
 
-.wrapper {
+.login-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
 }
 
-.container {
+.login-container {
     position: relative;
     width: 768px;
     max-width: 100%;
@@ -147,9 +147,10 @@ h1 {
     font-weight: bold;
     margin: 0;
 }
+
 .one-line {
-  font-size: 1.5em;
-  white-space: nowrap;
+    font-size: 1.5em;
+    white-space: nowrap;
 }
 
 p {

@@ -7,9 +7,9 @@ export const AuthenticatedNavbar = () => {
     const { userProfile, logout } = useAuth();
 
     return (
-        <nav className="navbar">
+        <nav className="Auth-navbar">
             <Link to="/">
-                <img src="/logo.png" alt="Logo" className="logo" />
+                <img src="/logo.png" alt="Logo" className="Auth-logo" />
             </Link>
             <ul>
                 <li><Link to="/">Dashboard</Link></li>
@@ -18,15 +18,15 @@ export const AuthenticatedNavbar = () => {
                 <li><Link to="/portfolio-builder">Portfolio Builder</Link></li>
                 <li><Link to="/redeem">Redeem</Link></li>
             </ul>
-            <div className="profile-section">
+            <div className="Auth-profile-section">
                 <img
                     src={userProfile?.photoURL || "/default-avatar.png"}
                     alt="Profile"
-                    className="profile"
+                    className="Auth-profile"
                 />
                 <button
                     onClick={logout}
-                    className="sign-out-button"
+                    className="Auth-sign-out-button"
                 >
                     Sign Out
                 </button>

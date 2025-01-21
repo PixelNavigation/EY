@@ -4,7 +4,7 @@ import './PublicNavbar.css';
 
 export const PublicNavbar = () => {
     return (
-        <nav className="navbar">
+        <nav className="navbar public-navbar">
 
             <Link to="/" className="logo-container">
                 <img src="/logo.png" alt="Logo" className="logo" />
