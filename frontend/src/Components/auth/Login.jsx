@@ -12,6 +12,9 @@ const LoginPage = () => {
     const [signUpData, setSignUpData] = useState({ name: "", email: "", password: "" });
     const [signInData, setSignInData] = useState({ email: "", password: "" });
 
+    // Configure axios defaults
+    axios.defaults.withCredentials = true;
+
     const handleSignUpClick = () => setIsSignUpActive(true);
     const handleSignInClick = () => setIsSignUpActive(false);
 
@@ -23,31 +26,29 @@ const LoginPage = () => {
         try {
             const response = await axios.post(
                 `${import.meta.env.VITE_API_URL}/api/register`,
-                signUpData,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    withCredentials: true
-                }
+                signUpData
             );
-            setIsSignUpActive(false);
-            setError("Registration successful! Please sign in.");
-            setSignUpData({ name: "", email: "", password: "" });
+            localStorage.setItem("token", response.data.token);
+            login(response.data.user);
+            navigate("/");
         } catch (err) {
-            setError(err.response?.data?.message || "Registration failed");
+            setError(err.response?.data?.message || "Sign up failed");
         }
     };
 
     const handleSignIn = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/login`, signInData, {
-                withCredentials: true,
-            });
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/login`, signInData);
             localStorage.setItem("token", response.data.token);
             login(response.data.user);
-            navigate("/");
+
+            // Check if response indicates profile is incomplete
+            if (response.data.redirect === "/profile") {
+                navigate("/profile", { state: { requireCompletion: true } });
+            } else {
+                navigate("/");
+            }
         } catch (err) {
             setError(err.response?.data?.message || "Login failed");
         }

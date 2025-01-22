@@ -1,0 +1,130 @@
+.aimockinterview-container {
+    width: 100%;
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+.aimockinterview-container .card {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.aimockinterview-container .card-header {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+}
+
+.aimockinterview-container .card-title {
+    font-size: 1.5em;
+    margin: 0;
+}
+
+.aimockinterview-container .card-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.aimockinterview-container .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .aimockinterview-container .grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.aimockinterview-container .left-column,
+.aimockinterview-container .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.aimockinterview-container .video-container {
+    position: relative;
+    padding-top: 56.25%;
+    /* 16:9 Aspect Ratio */
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.aimockinterview-container .video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.aimockinterview-container .button-group {
+    display: flex;
+    gap: 8px;
+}
+
+.aimockinterview-container .button {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.aimockinterview-container .button:hover {
+    background-color: #0056b3;
+}
+
+.aimockinterview-container .button.stop {
+    background-color: #dc3545;
+}
+
+.aimockinterview-container .button.start {
+    background-color: #28a745;
+}
+
+.aimockinterview-container .question-container,
+.aimockinterview-container .feedback-container,
+.aimockinterview-container .timer-container {
+    background-color: #f0f0f0;
+    padding: 16px;
+    border-radius: 4px;
+}
+
+.aimockinterview-container .question-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.aimockinterview-container .alert {
+    display: flex;
+    align-items: center;
+    border: 1px solid #f5c6cb;
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 16px;
+}
+
+.aimockinterview-container .alert-description {
+    margin: 0;
+    margin-left: 8px;
+}
+
+.aimockinterview-container .icon {
+    width: 16px;
+    height: 16px;
+}
+
+.aimockinterview-container .timer {
+    font-weight: bold;
+}

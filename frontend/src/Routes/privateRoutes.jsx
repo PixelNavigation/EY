@@ -1,8 +1,9 @@
 import Dashboard from '../Components/pages/Dashboard';
 import LearningPath from '../Components/pages/LearningPath';
-import MockInterview from '../Components/pages/Mockinterview';
+import MockInterview from '../Components/pages/AIMockInterview';
 import PortfolioBuilder from '../Components/pages/PortfolioBuilder';
 import Redeem from '../Components/pages/Redeem';
+import Profile from '../Components/pages/Profile';
 
 export const privateRoutes = [
     {
@@ -24,5 +25,9 @@ export const privateRoutes = [
     {
         path: '/redeem',
         component: Redeem,
+    },
+    {
+        path: '/profile',
+        component: Profile,
     },
 ];

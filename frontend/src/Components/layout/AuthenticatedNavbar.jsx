@@ -32,9 +32,11 @@ const AuthenticatedNavbar = () => {
                 />
                 {isDropdownOpen && (
                     <div className="Auth-dropdown-menu">
-                        <button onClick={() => { }}>
-                            Profile
-                        </button>
+                        <Link to="/profile" onClick={toggleDropdown}>
+                            <button>
+                                Profile
+                            </button>
+                        </Link>
                         <button onClick={logout}>
                             Sign Out
                         </button>
