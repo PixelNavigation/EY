@@ -43,9 +43,8 @@ const LoginPage = () => {
             localStorage.setItem("token", response.data.token);
             login(response.data.user);
 
-            // Check if response indicates profile is incomplete
             if (response.data.redirect === "/profile") {
-                navigate("/profile", { state: { requireCompletion: true } });
+                navigate("/ProfileForm", { state: { requireCompletion: true } });
             } else {
                 navigate("/");
             }

@@ -4,6 +4,7 @@ import MockInterview from '../Components/pages/AIMockInterview';
 import PortfolioBuilder from '../Components/pages/PortfolioBuilder';
 import Redeem from '../Components/pages/Redeem';
 import Profile from '../Components/pages/Profile';
+import ProfileForm from '../Components/pages/ProfileForm';
 
 export const privateRoutes = [
     {
@@ -29,5 +30,9 @@ export const privateRoutes = [
     {
         path: '/profile',
         component: Profile,
+    },
+    {
+        path: '/ProfileForm',
+        component: ProfileForm,
     },
 ];

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AlertCircle, Mic, Camera, Code, Eye, Timer } from 'lucide-react';
-import { DebounceInput } from 'react-debounce-input';
+import axios from 'axios';
+import { Mic, Camera, Code, Eye, Timer } from 'lucide-react';
 import MonacoEditor from '@monaco-editor/react';
 import * as faceapi from 'face-api.js';
 import './AIMockInterview.css';
@@ -8,39 +8,26 @@ import './AIMockInterview.css';
 const AIMockInterview = () => {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState('');
-    const [feedback, setFeedback] = useState({ speech: '', eyeContact: '', technical: '' });
+    const [feedback, setFeedback] = useState([]);
     const [currentQuestion, setCurrentQuestion] = useState(0);
+    const [questions, setQuestions] = useState([]);
     const [cameraActive, setCameraActive] = useState(false);
     const [showCodeEditor, setShowCodeEditor] = useState(false);
     const [code, setCode] = useState('');
     const [timer, setTimer] = useState(0);
+    const [interviewType, setInterviewType] = useState('general');
+    const [isLoading, setIsLoading] = useState(false);
+    const [modelsLoaded, setModelsLoaded] = useState(false);
+
     const videoRef = useRef(null);
     const recognition = useRef(null);
     const timerRef = useRef(null);
-
-    const questions = [
-        {
-            id: 1,
-            type: 'behavioral',
-            question: 'Tell me about a challenging project you worked on.',
-        },
-        {
-            id: 2,
-            type: 'technical',
-            question: 'Write a function to reverse a string without using built-in methods.',
-            requiresCode: true,
-        },
-        {
-            id: 3,
-            type: 'behavioral',
-            question: 'How do you handle conflicts in a team?',
-        },
-    ];
 
     useEffect(() => {
         const loadModels = async () => {
             await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
             await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+            setModelsLoaded(true);
         };
         loadModels();
 
@@ -58,28 +45,70 @@ const AIMockInterview = () => {
         }
 
         return () => {
-            if (recognition.current) {
-                recognition.current.stop();
-            }
-            if (cameraActive) {
-                stopCamera();
-            }
+            if (recognition.current) recognition.current.stop();
+            stopCamera();
             clearInterval(timerRef.current);
         };
     }, []);
 
+    useEffect(() => {
+        fetchDynamicQuestions();
+    }, [interviewType]);
+
+    const fetchDynamicQuestions = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.post('/api/generate-questions', {
+                type: interviewType,
+                num_questions: 3
+            });
+            setQuestions(response.data);
+            setCurrentQuestion(0);
+            setShowCodeEditor(response.data[0].requiresCode || false);
+        } catch (error) {
+            console.error('Error fetching questions:', error);
+            setQuestions([{
+                id: 1,
+                type: interviewType,
+                question: 'Tell me about yourself.',
+                requiresCode: false
+            }]);
+        }
+        setIsLoading(false);
+    };
+
+    const saveInterviewFeedback = async () => {
+        try {
+            await axios.post('/api/save-interview-feedback', {
+                type: interviewType,
+                feedback: {
+                    transcript,
+                    code,
+                    feedbackItems: feedback
+                }
+            });
+        } catch (error) {
+            console.error('Error saving feedback:', error);
+        }
+    };
+
     const startInterview = async () => {
+        if (!modelsLoaded) {
+            console.error('Models not loaded yet');
+            return;
+        }
         try {
             await startCamera();
             setCameraActive(true);
             setIsListening(true);
             recognition.current.start();
             startTimer();
+            speakQuestion(questions[currentQuestion].question);
         } catch (error) {
-            setFeedback((prev) => ({
+            setFeedback(prev => [
                 ...prev,
-                technical: 'Error accessing camera or microphone. Please check permissions.',
-            }));
+                { type: 'technical', message: 'Error accessing camera or microphone.' }
+            ]);
         }
     };
 
@@ -89,6 +118,23 @@ const AIMockInterview = () => {
         stopCamera();
         setCameraActive(false);
         clearInterval(timerRef.current);
+        saveInterviewFeedback();
+        alert('Interview Complete! Feedback has been saved.');
+    };
+
+    const nextQuestion = () => {
+        if (currentQuestion < questions.length - 1) {
+            const nextQuestionIndex = currentQuestion + 1;
+            setCurrentQuestion(nextQuestionIndex);
+            setTranscript('');
+            setCode('');
+            setShowCodeEditor(questions[nextQuestionIndex].requiresCode || false);
+            clearInterval(timerRef.current);
+            startTimer();
+            speakQuestion(questions[nextQuestionIndex].question);
+        } else {
+            stopInterview();
+        }
     };
 
     const startCamera = async () => {
@@ -116,20 +162,17 @@ const AIMockInterview = () => {
 
     const analyzeSpeech = (text) => {
         const wordsPerMinute = (text.split(' ').length / (timer || 1)) * 60;
-        let speechFeedback = '';
+        const speechFeedback =
+            wordsPerMinute < 120
+                ? 'Try speaking a bit faster and more confidently.'
+                : wordsPerMinute > 180
+                    ? 'Slow down a bit to maintain clarity.'
+                    : 'Good speaking pace!';
 
-        if (wordsPerMinute < 120) {
-            speechFeedback = 'Try speaking a bit faster and more confidently.';
-        } else if (wordsPerMinute > 180) {
-            speechFeedback = 'Slow down a bit to maintain clarity.';
-        } else {
-            speechFeedback = 'Good speaking pace!';
-        }
-
-        setFeedback((prev) => ({
+        setFeedback((prev) => [
             ...prev,
-            speech: speechFeedback,
-        }));
+            { type: 'speech', message: speechFeedback },
+        ]);
     };
 
     const analyzeEyeContact = () => {
@@ -139,41 +182,39 @@ const AIMockInterview = () => {
                     videoRef.current,
                     new faceapi.TinyFaceDetectorOptions()
                 );
-                setFeedback((prev) => ({
+                const eyeFeedback = detections.length
+                    ? 'Good eye contact!'
+                    : 'Maintain eye contact with the camera.';
+                setFeedback((prev) => [
                     ...prev,
-                    eyeContact: detections.length ? 'Good eye contact!' : 'Maintain eye contact with the camera.',
-                }));
+                    { type: 'eyeContact', message: eyeFeedback },
+                ]);
             }
         };
         setInterval(detectFaces, 2000);
     };
 
     const analyzeCode = () => {
-        let technicalFeedback = '';
-
-        if (code.includes('for') || code.includes('while')) {
-            technicalFeedback = 'Consider using more efficient methods. Try string manipulation without loops.';
-        } else if (!code.includes('return')) {
-            technicalFeedback = 'Make sure to return the final result.';
-        } else {
-            technicalFeedback = 'Good approach! Consider adding error handling.';
-        }
-
-        setFeedback((prev) => ({
+        const technicalFeedback = code.includes('return')
+            ? 'Good approach! Consider optimizing for edge cases.'
+            : 'Make sure to return the result.';
+        setFeedback((prev) => [
             ...prev,
-            technical: technicalFeedback,
-        }));
+            { type: 'technical', message: technicalFeedback },
+        ]);
     };
 
-    const nextQuestion = () => {
-        if (currentQuestion < questions.length - 1) {
-            setCurrentQuestion((prev) => prev + 1);
-            setTranscript('');
-            setCode('');
-            setShowCodeEditor(questions[currentQuestion + 1].requiresCode || false);
-            clearInterval(timerRef.current);
-            startTimer();
+    const speakQuestion = (question) => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(question);
+            window.speechSynthesis.speak(utterance);
+        } else {
+            console.error('Text-to-speech not supported.');
         }
+    };
+
+    const provideFinalFeedback = () => {
+        alert('Interview Complete! Review your feedback: ' + JSON.stringify(feedback, null, 2));
     };
 
     return (
@@ -181,6 +222,18 @@ const AIMockInterview = () => {
             <div className="card">
                 <div className="card-header">
                     <h2 className="card-title">AI Mock Interview</h2>
+                    <div className="interview-type-selector">
+                        {['general', 'technical', 'behavioral'].map(type => (
+                            <button
+                                key={type}
+                                className={interviewType === type ? 'active' : ''}
+                                onClick={() => setInterviewType(type)}
+                                disabled={isListening}
+                            >
+                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                            </button>
+                        ))}
+                    </div>
                 </div>
                 <div className="card-content">
                     <div className="grid">
@@ -196,52 +249,52 @@ const AIMockInterview = () => {
                                 >
                                     {isListening ? 'Stop Interview' : 'Start Interview'}
                                 </button>
-                                <button className="button" onClick={nextQuestion}>Next Question</button>
+                                {isListening && (
+                                    <button className="button" onClick={nextQuestion}>
+                                        Next Question
+                                    </button>
+                                )}
                             </div>
                         </div>
 
                         <div className="right-column">
-                            <div className="question-container">
-                                <h3 className="question-title">Current Question:</h3>
-                                <p>{questions[currentQuestion].question}</p>
-                            </div>
+                            {isLoading ? (
+                                <div>Loading questions...</div>
+                            ) : (
+                                <>
+                                    <div className="question-container">
+                                        <h3 className="question-title">Current Question:</h3>
+                                        <p>{questions[currentQuestion]?.question}</p>
+                                    </div>
 
-                            {showCodeEditor && (
-                                <div className="code-editor-container">
-                                    <MonacoEditor
-                                        height="200px"
-                                        language="javascript"
-                                        value={code}
-                                        onChange={(value) => setCode(value)}
-                                    />
-                                    <button className="button" onClick={analyzeCode}>Analyze Code</button>
-                                </div>
+                                    {showCodeEditor && (
+                                        <div className="code-editor-container">
+                                            <MonacoEditor
+                                                height="200px"
+                                                language="javascript"
+                                                value={code}
+                                                onChange={(value) => setCode(value)}
+                                            />
+                                            <button className="button" onClick={analyzeCode}>Analyze Code</button>
+                                        </div>
+                                    )}
+
+                                    <div className="feedback-container">
+                                        {feedback.map((feedbackItem, index) => (
+                                            <div key={index} className="alert">
+                                                {feedbackItem.type === 'speech' && <Mic className="icon" />}
+                                                {feedbackItem.type === 'eyeContact' && <Eye className="icon" />}
+                                                {feedbackItem.type === 'technical' && <Code className="icon" />}
+                                                <p className="alert-description">{feedbackItem.message}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="timer-container">
+                                        <h3 className="timer">Timer: {timer}s</h3>
+                                    </div>
+                                </>
                             )}
-
-                            <div className="feedback-container">
-                                {feedback.speech && (
-                                    <div className="alert">
-                                        <Mic className="icon" />
-                                        <p className="alert-description">{feedback.speech}</p>
-                                    </div>
-                                )}
-                                {feedback.eyeContact && (
-                                    <div className="alert">
-                                        <Eye className="icon" />
-                                        <p className="alert-description">{feedback.eyeContact}</p>
-                                    </div>
-                                )}
-                                {feedback.technical && (
-                                    <div className="alert">
-                                        <Code className="icon" />
-                                        <p className="alert-description">{feedback.technical}</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="timer-container">
-                                <h3 className="timer">Timer: {timer}s</h3>
-                            </div>
                         </div>
                     </div>
                 </div>

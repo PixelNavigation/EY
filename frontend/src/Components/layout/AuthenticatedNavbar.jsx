@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './AuthenticatedNavbar.css';
 
@@ -9,6 +10,13 @@ const AuthenticatedNavbar = () => {
 
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
+    };
+
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/about');
     };
 
     return (
@@ -37,7 +45,7 @@ const AuthenticatedNavbar = () => {
                                 Profile
                             </button>
                         </Link>
-                        <button onClick={logout}>
+                        <button onClick={handleLogout} >
                             Sign Out
                         </button>
                     </div>
