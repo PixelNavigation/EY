@@ -8,7 +8,11 @@ import './AIMockInterview.css';
 const AIMockInterview = () => {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState('');
-    const [feedback, setFeedback] = useState([]);
+    const [feedback, setFeedback] = useState({
+        speech: '',
+        eyeContact: '',
+        technical: ''
+    });
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [questions, setQuestions] = useState([]);
     const [cameraActive, setCameraActive] = useState(false);
@@ -160,6 +164,13 @@ const AIMockInterview = () => {
         }, 1000);
     };
 
+    const updateFeedback = (type, message) => {
+        setFeedback(prev => ({
+            ...prev,
+            [type]: message
+        }));
+    };
+
     const analyzeSpeech = (text) => {
         const wordsPerMinute = (text.split(' ').length / (timer || 1)) * 60;
         const speechFeedback =
@@ -169,10 +180,7 @@ const AIMockInterview = () => {
                     ? 'Slow down a bit to maintain clarity.'
                     : 'Good speaking pace!';
 
-        setFeedback((prev) => [
-            ...prev,
-            { type: 'speech', message: speechFeedback },
-        ]);
+        updateFeedback('speech', speechFeedback);
     };
 
     const analyzeEyeContact = () => {
@@ -185,10 +193,7 @@ const AIMockInterview = () => {
                 const eyeFeedback = detections.length
                     ? 'Good eye contact!'
                     : 'Maintain eye contact with the camera.';
-                setFeedback((prev) => [
-                    ...prev,
-                    { type: 'eyeContact', message: eyeFeedback },
-                ]);
+                updateFeedback('eyeContact', eyeFeedback);
             }
         };
         setInterval(detectFaces, 2000);
@@ -198,10 +203,7 @@ const AIMockInterview = () => {
         const technicalFeedback = code.includes('return')
             ? 'Good approach! Consider optimizing for edge cases.'
             : 'Make sure to return the result.';
-        setFeedback((prev) => [
-            ...prev,
-            { type: 'technical', message: technicalFeedback },
-        ]);
+        updateFeedback('technical', technicalFeedback);
     };
 
     const speakQuestion = (question) => {
@@ -280,13 +282,15 @@ const AIMockInterview = () => {
                                     )}
 
                                     <div className="feedback-container">
-                                        {feedback.map((feedbackItem, index) => (
-                                            <div key={index} className="alert">
-                                                {feedbackItem.type === 'speech' && <Mic className="icon" />}
-                                                {feedbackItem.type === 'eyeContact' && <Eye className="icon" />}
-                                                {feedbackItem.type === 'technical' && <Code className="icon" />}
-                                                <p className="alert-description">{feedbackItem.message}</p>
-                                            </div>
+                                        {Object.entries(feedback).map(([type, message]) => (
+                                            message && (
+                                                <div key={type} className="alert">
+                                                    {type === 'speech' && <Mic className="icon" />}
+                                                    {type === 'eyeContact' && <Eye className="icon" />}
+                                                    {type === 'technical' && <Code className="icon" />}
+                                                    <p className="alert-description">{message}</p>
+                                                </div>
+                                            )
                                         ))}
                                     </div>
 

@@ -1,26 +1,31 @@
 .aimockinterview-container {
-    width: 100%;
-    max-width: 1024px;
-    margin: 0 auto;
-    padding: 16px;
+    width: 100vw;
+    height: 100vh;
+    padding: 20px;
+    background-color: #f5f5f5;
+    overflow-x: hidden;
 }
 
 .aimockinterview-container .card {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 16px;
-    margin: 16px 0;
+    width: 100%;
+    height: calc(100vh - 40px);
+    margin: 0;
+    padding: 24px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .aimockinterview-container .card-header {
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 8px;
-    margin-bottom: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #eee;
 }
 
 .aimockinterview-container .card-title {
-    font-size: 1.5em;
-    margin: 0;
+    font-size: 2em;
+    color: #2c3e50;
+    margin-bottom: 16px;
 }
 
 .aimockinterview-container .card-content {
@@ -28,15 +33,37 @@
     flex-direction: column;
 }
 
+.aimockinterview-container .interview-type-selector {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.aimockinterview-container .interview-type-selector button {
+    padding: 8px 16px;
+    border: 2px solid #007bff;
+    border-radius: 6px;
+    background: transparent;
+    color: #007bff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.aimockinterview-container .interview-type-selector button.active {
+    background: #007bff;
+    color: white;
+}
+
 .aimockinterview-container .grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 16px;
+    height: calc(100% - 120px);
+    gap: 24px;
 }
 
 @media (min-width: 768px) {
     .aimockinterview-container .grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 45% 55%;
     }
 }
 
@@ -49,11 +76,11 @@
 
 .aimockinterview-container .video-container {
     position: relative;
-    padding-top: 56.25%;
-    /* 16:9 Aspect Ratio */
-    background-color: #f0f0f0;
-    border-radius: 4px;
+    padding-top: 75%;
+    background-color: #2c3e50;
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .aimockinterview-container .video {
@@ -67,51 +94,69 @@
 
 .aimockinterview-container .button-group {
     display: flex;
-    gap: 8px;
+    gap: 12px;
+    margin-top: 16px;
 }
 
 .aimockinterview-container .button {
-    background-color: #007bff;
-    color: white;
-    padding: 8px 16px;
+    flex: 1;
+    padding: 12px 24px;
+    font-size: 1.1em;
+    font-weight: 600;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
-}
-
-.aimockinterview-container .button:hover {
-    background-color: #0056b3;
-}
-
-.aimockinterview-container .button.stop {
-    background-color: #dc3545;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .aimockinterview-container .button.start {
-    background-color: #28a745;
+    background-color: #2ecc71;
+}
+
+.aimockinterview-container .button.start:hover {
+    background-color: #27ae60;
+}
+
+.aimockinterview-container .button.stop {
+    background-color: #e74c3c;
+}
+
+.aimockinterview-container .button.stop:hover {
+    background-color: #c0392b;
 }
 
 .aimockinterview-container .question-container,
 .aimockinterview-container .feedback-container,
 .aimockinterview-container .timer-container {
-    background-color: #f0f0f0;
-    padding: 16px;
-    border-radius: 4px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .aimockinterview-container .question-title {
-    font-weight: bold;
-    margin-bottom: 8px;
+    color: #2c3e50;
+    font-size: 1.3em;
+    margin-bottom: 12px;
+}
+
+.aimockinterview-container .code-editor-container {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .aimockinterview-container .alert {
     display: flex;
     align-items: center;
-    border: 1px solid #f5c6cb;
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 8px;
-    border-radius: 4px;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #fff3cd;
+    color: #856404;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     margin-top: 16px;
 }
 
@@ -121,10 +166,40 @@
 }
 
 .aimockinterview-container .icon {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
+}
+
+.aimockinterview-container .timer-container {
+    background-color: #e9ecef;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
 }
 
 .aimockinterview-container .timer {
+    font-size: 1.5em;
+    color: #2c3e50;
     font-weight: bold;
+    margin: 0;
+}
+
+.aimockinterview-container .right-column {
+    max-height: 100%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f0f0f0;
+}
+
+.aimockinterview-container .right-column::-webkit-scrollbar {
+    width: 8px;
+}
+
+.aimockinterview-container .right-column::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+.aimockinterview-container .right-column::-webkit-scrollbar-thumb {
+    background-color: #007bff;
+    border-radius: 4px;
 }
