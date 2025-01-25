@@ -45,14 +45,15 @@ def allowed_file(filename):
 @app.route('/api/generate-questions', methods=['POST'])
 def generate_interview_questions():
     data = request.get_json()
-    interview_type = data.get('type', 'general')
+    interview_type = data.get('type', 'Software Developer')
     num_questions = data.get('num_questions', 3)
     groq_api_key = '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'
     groq_api_url = 'https://api.groq.com/openai/v1/chat/completions'
     prompts = {
-        'technical': f"Generate {num_questions} advanced technical interview questions for a software engineering role. Provide each question as a JSON object with 'question' and 'difficulty' fields.",
-        'behavioral': f"Generate {num_questions} behavioral interview questions assessing leadership, teamwork, and problem-solving skills. Format as JSON objects with 'question' and 'skill_assessed' fields.",
-        'general': f"Generate {num_questions} diverse interview questions covering technical skills and behavioral aspects. Create JSON objects with 'question' and 'type' fields."
+        'Software Developer': f"""Return JSON with a 'questions' array of length {num_questions}. 
+Each element must have a 'question' field. Example: {{ "questions": [{{"question": "..."}}, ...] }}""",
+        'Data Scientist': f"""Return JSON with a 'questions' array of length {num_questions}. 
+Each element must have a 'question' field. Example: {{ "questions": [{{"question": "..."}}, ...] }}""",
     }
     try:
         response = requests.post(
@@ -70,7 +71,7 @@ def generate_interview_questions():
                     },
                     {
                         'role': 'user', 
-                        'content': prompts.get(interview_type, prompts['general'])
+                        'content': prompts.get(interview_type, prompts['Software Developer'])
                     }
                 ],
                 'response_format': {'type': 'json_object'},
@@ -88,7 +89,7 @@ def generate_interview_questions():
                     'id': idx,
                     'type': interview_type,
                     'question': q.get('question', 'No question generated'),
-                    'requiresCode': interview_type == 'technical' and idx % 2 == 0
+                    'requiresCode': interview_type.lower() in ['technical', 'software developer'] and idx % 2 == 0
                 })
             if not formatted_questions:
                 formatted_questions = [
@@ -110,6 +111,18 @@ def generate_interview_questions():
             "error": "Failed to generate questions",
             "details": str(e)
         }), 500
+
+@app.route('/api/save-interview-feedback', methods=['POST'])
+def save_interview_feedback():
+    try:
+        data = request.get_json()
+        feedback_type = data.get('type')
+        feedback_items = data.get('feedback', {})
+        # Here you can store feedback in a new model or as desired.
+        # ...existing code or logic to save feedback...
+        return jsonify({"message": "Feedback saved successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/register', methods=['POST'])
 def register():

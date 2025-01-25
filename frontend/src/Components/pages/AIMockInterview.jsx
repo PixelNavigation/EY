@@ -4,6 +4,7 @@ import { Mic, Camera, Code, Eye, Timer } from 'lucide-react';
 import MonacoEditor from '@monaco-editor/react';
 import * as faceapi from 'face-api.js';
 import './AIMockInterview.css';
+import { useNavigate } from 'react-router-dom';
 
 const AIMockInterview = () => {
     const [isListening, setIsListening] = useState(false);
@@ -19,13 +20,14 @@ const AIMockInterview = () => {
     const [showCodeEditor, setShowCodeEditor] = useState(false);
     const [code, setCode] = useState('');
     const [timer, setTimer] = useState(0);
-    const [interviewType, setInterviewType] = useState('general');
     const [isLoading, setIsLoading] = useState(false);
     const [modelsLoaded, setModelsLoaded] = useState(false);
+    const [careerAmbition, setCareerAmbition] = useState('Software Developer');
 
     const videoRef = useRef(null);
     const recognition = useRef(null);
     const timerRef = useRef(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const loadModels = async () => {
@@ -56,14 +58,33 @@ const AIMockInterview = () => {
     }, []);
 
     useEffect(() => {
-        fetchDynamicQuestions();
-    }, [interviewType]);
+        // Fetch user profile to get careerAmbition
+        const fetchUserCareerAmbition = async () => {
+            try {
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/profile`);
+                setCareerAmbition(response.data.careerAmbition || 'Software Developer');
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                if (error.response && error.response.status === 401) {
+                    navigate('/login');
+                }
+            }
+        };
+        fetchUserCareerAmbition();
+    }, []);
 
-    const fetchDynamicQuestions = async () => {
+    useEffect(() => {
+        // Fetch questions based on user’s careerAmbition
+        if (careerAmbition) {
+            fetchDynamicQuestions(careerAmbition);
+        }
+    }, [careerAmbition]);
+
+    const fetchDynamicQuestions = async (ambition) => {
         setIsLoading(true);
         try {
             const response = await axios.post('/api/generate-questions', {
-                type: interviewType,
+                type: ambition,  // use the careerAmbition
                 num_questions: 3
             });
             setQuestions(response.data);
@@ -73,7 +94,7 @@ const AIMockInterview = () => {
             console.error('Error fetching questions:', error);
             setQuestions([{
                 id: 1,
-                type: interviewType,
+                type: ambition,
                 question: 'Tell me about yourself.',
                 requiresCode: false
             }]);
@@ -84,7 +105,7 @@ const AIMockInterview = () => {
     const saveInterviewFeedback = async () => {
         try {
             await axios.post('/api/save-interview-feedback', {
-                type: interviewType,
+                type: careerAmbition,
                 feedback: {
                     transcript,
                     code,
@@ -224,18 +245,6 @@ const AIMockInterview = () => {
             <div className="card">
                 <div className="card-header">
                     <h2 className="card-title">AI Mock Interview</h2>
-                    <div className="interview-type-selector">
-                        {['general', 'technical', 'behavioral'].map(type => (
-                            <button
-                                key={type}
-                                className={interviewType === type ? 'active' : ''}
-                                onClick={() => setInterviewType(type)}
-                                disabled={isListening}
-                            >
-                                {type.charAt(0).toUpperCase() + type.slice(1)}
-                            </button>
-                        ))}
-                    </div>
                 </div>
                 <div className="card-content">
                     <div className="grid">
