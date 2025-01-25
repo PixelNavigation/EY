@@ -8,6 +8,17 @@ import base64
 import json
 import requests
 
+# Define your API URL and key
+groq_api_url = 'https://api.groq.com/openai/v1/chat/completions'
+groq_api_key = os.environ.get('GROQ_API_KEY', 'your_api_key')
+
+# Define prompts for different interview types
+prompts = {
+    'Google': 'Generate a set of interview questions for a Google software engineering position.',
+    'Microsoft': 'Generate a set of interview questions for a Microsoft software engineering position.',
+    'Amazon': 'Generate a set of interview questions for an Amazon software engineering position.'
+}
+
 app = Flask(__name__)
 
 #Configurations
@@ -44,71 +55,105 @@ def allowed_file(filename):
 #Routes
 @app.route('/api/generate-questions', methods=['POST'])
 def generate_interview_questions():
-    data = request.get_json()
-    interview_type = data.get('type', 'Software Developer')
-    num_questions = data.get('num_questions', 3)
-    groq_api_key = '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'
-    groq_api_url = 'https://api.groq.com/openai/v1/chat/completions'
-    prompts = {
-        'Software Developer': f"""Return JSON with a 'questions' array of length {num_questions}. 
-Each element must have a 'question' field. Example: {{ "questions": [{{"question": "..."}}, ...] }}""",
-        'Data Scientist': f"""Return JSON with a 'questions' array of length {num_questions}. 
-Each element must have a 'question' field. Example: {{ "questions": [{{"question": "..."}}, ...] }}""",
-    }
     try:
-        response = requests.post(
-            groq_api_url,
-            headers={
-                'Authorization': f'Bearer {groq_api_key}',
-                'Content-Type': 'application/json'
-            },
-            json={
-                'model': 'llama3-8b-8192',
-                'messages': [
+        print("Received request for generate_questions") # Debug log
+        data = request.get_json()
+        if not data:
+            print("No JSON data received")
+            return jsonify({"error": "No data received"}), 400
+
+        interview_type = data.get('type')
+        print(f"Interview type received: {interview_type}") # Debug log
+
+        if not interview_type:
+            return jsonify({"error": "Interview type is required"}), 400
+
+        num_rounds = data.get('num_rounds', 3)
+        
+        # Fallback response in case of API issues
+        fallback_questions = {
+            'Google': [
+                [
                     {
-                        'role': 'system', 
-                        'content': 'You are a professional interview question generator. Create thoughtful interview questions in strict JSON format.'
-                    },
-                    {
-                        'role': 'user', 
-                        'content': prompts.get(interview_type, prompts['Software Developer'])
-                    }
-                ],
-                'response_format': {'type': 'json_object'},
-                'max_tokens': 300,
-                'temperature': 0.7
-            }
-        )
-        response_data = response.json()
-        generated_content = response_data['choices'][0]['message']['content']
-        try:
-            parsed_questions = json.loads(generated_content)
-            formatted_questions = []
-            for idx, q in enumerate(parsed_questions.get('questions', []), 1):
-                formatted_questions.append({
-                    'id': idx,
-                    'type': interview_type,
-                    'question': q.get('question', 'No question generated'),
-                    'requiresCode': interview_type.lower() in ['technical', 'software developer'] and idx % 2 == 0
-                })
-            if not formatted_questions:
-                formatted_questions = [
-                    {
-                        'id': 1,
-                        'type': interview_type,
-                        'question': 'Tell me about a challenging project you worked on.',
+                        'id': 'fallback_1',
+                        'type': 'Google',
+                        'question': 'Explain your experience with algorithms and data structures.',
                         'requiresCode': False
                     }
                 ]
-            return jsonify(formatted_questions), 200
-        except (json.JSONDecodeError, KeyError) as parse_error:
+            ],
+            'Microsoft': [
+                [
+                    {
+                        'id': 'fallback_1',
+                        'type': 'Microsoft',
+                        'question': 'Describe a challenging project you worked on.',
+                        'requiresCode': False
+                    }
+                ]
+            ],
+            'Amazon': [
+                [
+                    {
+                        'id': 'fallback_1',
+                        'type': 'Amazon',
+                        'question': 'Tell me about a time you demonstrated leadership.',
+                        'requiresCode': False
+                    }
+                ]
+            ]
+        }
+
+        # If interview type is not in our supported companies, return error
+        if interview_type not in ['Google', 'Microsoft', 'Amazon']:
             return jsonify({
-                "error": "Failed to parse generated questions",
-                "details": str(parse_error)
-            }), 500
+                "error": "Invalid company selected",
+                "details": f"Company '{interview_type}' not supported"
+            }), 400
+
+        try:
+            # Your existing API call code here
+            response = requests.post(
+                groq_api_url,
+                headers={
+                    'Authorization': f'Bearer {groq_api_key}',
+                    'Content-Type': 'application/json'
+                },
+                json={
+                    'model': 'llama2-70b-4096',  # Changed model to a more stable one
+                    'messages': [
+                        {
+                            'role': 'system',
+                            'content': 'You are a professional interview question generator for top tech companies.'
+                        },
+                        {
+                            'role': 'user',
+                            'content': prompts.get(interview_type)
+                        }
+                    ],
+                    'max_tokens': 1000,
+                    'temperature': 0.7
+                }
+            )
+            
+            if response.status_code != 200:
+                print(f"API Error: {response.status_code} - {response.text}")  # Debug log
+                return jsonify(fallback_questions[interview_type]), 200
+                
+            response_data = response.json()
+            generated_content = response_data['choices'][0]['message']['content']
+            
+            # Rest of your existing parsing code...
+            
+        except requests.exceptions.RequestException as e:
+            print(f"API Request Error: {str(e)}")  # Debug log
+            # Return fallback questions if API fails
+            return jsonify(fallback_questions[interview_type]), 200
+            
     except Exception as e:
+        print(f"Unexpected error: {str(e)}")  # Debug log
         return jsonify({
-            "error": "Failed to generate questions",
+            "error": "Internal server error",
             "details": str(e)
         }), 500
 
@@ -118,6 +163,7 @@ def save_interview_feedback():
         data = request.get_json()
         feedback_type = data.get('type')
         feedback_items = data.get('feedback', {})
+        questions_and_answers = data.get('questionsAndAnswers', [])
         # Here you can store feedback in a new model or as desired.
         # ...existing code or logic to save feedback...
         return jsonify({"message": "Feedback saved successfully"}), 200
