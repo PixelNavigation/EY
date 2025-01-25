@@ -10,19 +10,22 @@ import requests
 
 app = Flask(__name__)
 
-# Configurations
+#Configurations
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Gautam%401@localhost:5432/login_app'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_secret_key')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
-# CORS Configuration
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
+#CORS Configuration
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}},
+     methods=["GET", "POST", "PUT", "DELETE"],
+     allow_headers=["Content-Type", "Authorization"],
+     expose_headers=["Content-Type"])
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
-# User model
+#User model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
@@ -32,12 +35,13 @@ class User(db.Model):
     phone = db.Column(db.String(20), nullable=True)
     college = db.Column(db.String(150), nullable=True)
     course = db.Column(db.String(150), nullable=True)
+    career_ambition = db.Column(db.String(150), nullable=False, default="Software Developer")
 
-# Utility to check allowed file types
+#Utility to check allowed file types
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-# Routes
+#Routes
 @app.route('/api/generate-questions', methods=['POST'])
 def generate_interview_questions():
     data = request.get_json()
@@ -50,7 +54,6 @@ def generate_interview_questions():
         'behavioral': f"Generate {num_questions} behavioral interview questions assessing leadership, teamwork, and problem-solving skills. Format as JSON objects with 'question' and 'skill_assessed' fields.",
         'general': f"Generate {num_questions} diverse interview questions covering technical skills and behavioral aspects. Create JSON objects with 'question' and 'type' fields."
     }
-
     try:
         response = requests.post(
             groq_api_url,
@@ -75,13 +78,10 @@ def generate_interview_questions():
                 'temperature': 0.7
             }
         )
-
         response_data = response.json()
         generated_content = response_data['choices'][0]['message']['content']
-        
         try:
             parsed_questions = json.loads(generated_content)
-            
             formatted_questions = []
             for idx, q in enumerate(parsed_questions.get('questions', []), 1):
                 formatted_questions.append({
@@ -90,7 +90,6 @@ def generate_interview_questions():
                     'question': q.get('question', 'No question generated'),
                     'requiresCode': interview_type == 'technical' and idx % 2 == 0
                 })
-
             if not formatted_questions:
                 formatted_questions = [
                     {
@@ -100,15 +99,12 @@ def generate_interview_questions():
                         'requiresCode': False
                     }
                 ]
-
             return jsonify(formatted_questions), 200
-
         except (json.JSONDecodeError, KeyError) as parse_error:
             return jsonify({
                 "error": "Failed to parse generated questions",
                 "details": str(parse_error)
             }), 500
-
     except Exception as e:
         return jsonify({
             "error": "Failed to generate questions",
@@ -124,16 +120,12 @@ def register():
 
     if not name or not email or not password:
         return jsonify({"message": "All fields are required"}), 400
-
     if User.query.filter_by(email=email).first():
         return jsonify({"message": "Email already exists"}), 400
-
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-
     new_user = User(name=name, email=email, password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
-
     return jsonify({"message": "User registered successfully"}), 201
 
 @app.route('/api/login', methods=['POST'])
@@ -141,16 +133,12 @@ def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
-
     if not email or not password:
         return jsonify({"message": "Email and password are required"}), 400
-
     user = User.query.filter_by(email=email).first()
     if not user or not bcrypt.check_password_hash(user.password, password):
         return jsonify({"message": "Invalid credentials"}), 401
-
     session['user_id'] = user.id
-
     if not all([user.image, user.phone, user.college, user.course]):
         return jsonify({
             "message": "Profile incomplete",
@@ -162,7 +150,6 @@ def login():
                 "email": user.email
             }
         }), 200
-
     return jsonify({
         "message": "Login successful",
         "token": "dummy-token-for-now",
@@ -183,11 +170,9 @@ def profile():
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({"message": "Unauthorized"}), 401
-
     user = User.query.get(user_id)
     if not user:
         return jsonify({"message": "User not found"}), 404
-
     if request.method == 'GET':
         image_base64 = None
         if user.image:
@@ -195,16 +180,15 @@ def profile():
                 image_base64 = base64.b64encode(user.image).decode('utf-8')
             except Exception as e:
                 return jsonify({"message": f"Error processing image: {str(e)}"}), 500
-
         return jsonify({
             "image": image_base64,
             "name": user.name,
             "email": user.email,
             "phone": user.phone,
             "college": user.college,
-            "course": user.course
+            "course": user.course,
+            "careerAmbition": user.career_ambition
         })
-
     if request.method == 'POST':
         data = request.form
         image_file = request.files.get('image')
@@ -214,15 +198,15 @@ def profile():
                 user.image = image_file.read()
             except Exception as e:
                 return jsonify({"message": f"Error saving image: {str(e)}"}), 500
-
         user.name = data.get('name', user.name)
         user.email = data.get('email', user.email)
         user.phone = data.get('phone', user.phone)
         user.college = data.get('college', user.college)
         user.course = data.get('course', user.course)
+        user.career_ambition = data.get('careerAmbition', user.career_ambition)
         db.session.commit()
-
         return jsonify({"message": "Profile updated successfully"}), 200
+#End of routes
 
 if __name__ == '__main__':
     with app.app_context():

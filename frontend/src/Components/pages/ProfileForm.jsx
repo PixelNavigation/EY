@@ -11,6 +11,7 @@ const ProfileForm = () => {
         phone: "",
         college: "",
         course: "",
+        careerAmbition: "Software Developer",
     });
     const navigate = useNavigate();
 
@@ -21,7 +22,17 @@ const ProfileForm = () => {
     const fetchProfile = async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/profile`);
-            setProfile(response.data);
+            const data = response.data || {};
+            setProfile((prev) => ({
+                ...prev,
+                image: data.image ?? null,
+                name: data.name ?? "",
+                email: data.email ?? "",
+                phone: data.phone ?? "",
+                college: data.college ?? "",
+                course: data.course ?? "",
+                careerAmbition: data.careerAmbition ?? "Software Developer",
+            }));
         } catch (error) {
             console.error("Error fetching profile:", error);
         }
@@ -45,6 +56,7 @@ const ProfileForm = () => {
         formData.append("phone", profile.phone);
         formData.append("college", profile.college);
         formData.append("course", profile.course);
+        formData.append("careerAmbition", profile.careerAmbition);
 
         try {
             await axios.post(`${import.meta.env.VITE_API_URL}/api/profile`, formData, {
@@ -83,6 +95,17 @@ const ProfileForm = () => {
                 <div>
                     <label>Course:</label>
                     <input type="text" name="course" value={profile.course} onChange={handleChange} required />
+                </div>
+                <div>
+                    <label>Career Ambition:</label>
+                    <select
+                        name="careerAmbition"
+                        value={profile.careerAmbition}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="Software Developer">Software Developer</option>
+                    </select>
                 </div>
                 <button type="submit">Save Changes</button>
             </form>

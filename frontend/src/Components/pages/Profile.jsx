@@ -43,6 +43,7 @@ const Profile = () => {
                         <p>Phone: {profile.phone || "Not provided"}</p>
                         <p>College: {profile.college || "Not provided"}</p>
                         <p>Course: {profile.course || "Not provided"}</p>
+                        <p>Career Ambition: {profile.careerAmbition || "Not provided"}</p>
                         <button onClick={handleEditClick} className="edit-button">Edit Profile</button>
                     </div>
                 ) : (
