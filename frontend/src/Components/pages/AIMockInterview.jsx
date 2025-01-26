@@ -18,21 +18,20 @@ const AIMockInterview = () => {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [currentRound, setCurrentRound] = useState(0);
     const [interviewRounds, setInterviewRounds] = useState([]);
-    const [questions, setQuestions] = useState([]); // Add missing state
     const [cameraActive, setCameraActive] = useState(false);
+    const [careerAmbition, setCareerAmbition] = useState(null);
     const [showCodeEditor, setShowCodeEditor] = useState(false);
     const [code, setCode] = useState('');
     const [timer, setTimer] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [modelsLoaded, setModelsLoaded] = useState(false);
-    const [careerAmbition, setCareerAmbition] = useState('Software Developer');
     const [answers, setAnswers] = useState([]);
     const [interviewComplete, setInterviewComplete] = useState(false);
     const [speechRecognitionError, setSpeechRecognitionError] = useState(null);
     const [cameraError, setCameraError] = useState(null);
-    const [fetchError, setFetchError] = useState(null); // Add state for fetch errors
+    const [fetchError, setFetchError] = useState(null);
 
-    const COMPANIES = ['Google', 'Microsoft', 'Amazon'];
+    const companyList = ['Google', 'Microsoft', 'Amazon'];
 
     const videoRef = useRef(null);
     const recognition = useRef(null);
@@ -82,7 +81,7 @@ const AIMockInterview = () => {
         const fetchUserCareerAmbition = async () => {
             try {
                 const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/profile`);
-                setCareerAmbition(response.data.careerAmbition || 'Software Developer');
+                setCareerAmbition(response.data.careerAmbition);
             } catch (error) {
                 console.error('Error fetching user profile:', error);
                 if (error.response && error.response.status === 401) {
@@ -93,69 +92,25 @@ const AIMockInterview = () => {
         fetchUserCareerAmbition();
     }, []);
 
-    const fetchDynamicQuestions = async (ambition) => {
-        if (!ambition) return;  // Only check for ambition, remove selectedCompany check
-
-        setIsLoading(true);
-        setFetchError(null);
-        try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/generate-questions`, {
-                type: ambition,
-                num_questions: 3
-            });
-            setQuestions(response.data);
-            setCurrentQuestion(0);
-            setShowCodeEditor(response.data[0].requiresCode || false);
-        } catch (error) {
-            console.error('Error fetching questions:', error);
-            setFetchError('Failed to fetch questions. Please try again later.');
-            setQuestions([{
-                id: 1,
-                type: ambition,
-                question: 'Tell me about yourself.',
-                requiresCode: false
-            }]);
-        }
-        setIsLoading(false);
-    };
-
     const fetchCompanyInterviewRounds = async (company) => {
         setIsLoading(true);
         setFetchError(null);
         try {
-            console.log('Fetching questions for company:', company); // Debug log
-
             const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/generate-questions`, {
-                type: company,
-                num_rounds: 3
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                timeout: 10000 // 10 second timeout
+                type: company
             });
 
-            console.log('API Response:', response.data); // Debug log
-
-            if (response.data) {
-                if (Array.isArray(response.data)) {
-                    setInterviewRounds(response.data);
-                    setCurrentRound(0);
-                    setCurrentQuestion(0);
-                    setShowCodeEditor(response.data[0]?.[0]?.requiresCode || false);
-                } else {
-                    throw new Error('Invalid response format');
-                }
+            if (Array.isArray(response.data)) {
+                setInterviewRounds(response.data);
+                setCurrentRound(0);
+                setCurrentQuestion(0);
+                setShowCodeEditor(response.data[0]?.[0]?.requiresCode || false);
             } else {
-                throw new Error('No data received from server');
+                throw new Error('Invalid response format');
             }
         } catch (error) {
-            console.error('Error details:', error.response?.data || error.message);
-            setFetchError(
-                error.response?.data?.error ||
-                'Failed to fetch interview rounds. Please try again later.'
-            );
+            console.error('Error fetching interview rounds:', error);
+            setFetchError('Failed to fetch interview questions. Please try again.');
             setInterviewRounds([]);
         } finally {
             setIsLoading(false);
@@ -172,10 +127,13 @@ const AIMockInterview = () => {
             <div className="company-selection">
                 <h2>Select a Company for Mock Interview</h2>
                 <div className="company-grid">
-                    {COMPANIES.map(company => (
+                    {companyList.map((company) => (
                         <button
                             key={company}
-                            onClick={() => selectCompany(company)}
+                            onClick={() => {
+                                setSelectedCompany(company);
+                                fetchCompanyInterviewRounds(company);
+                            }}
                             className="company-button"
                         >
                             <Building2 className="icon" />
@@ -189,21 +147,40 @@ const AIMockInterview = () => {
     };
 
     const renderInterviewRounds = () => {
-        return interviewRounds.map((round, index) => (
-            <div
-                key={index}
-                className={`round ${currentRound === index ? 'active' : ''}`}
-            >
-                {round.map((question, qIndex) => (
-                    <div
-                        key={qIndex}
-                        className={`question ${currentQuestion === qIndex ? 'current' : ''}`}
-                    >
-                        {question.question}
+        if (!interviewRounds.length) return null;
+
+        // Only show current round and question
+        const currentRoundData = interviewRounds[currentRound];
+        if (!currentRoundData) return null;
+
+        const totalRounds = interviewRounds.length;
+        const totalQuestionsInRound = currentRoundData.length;
+
+        return (
+            <>
+                <div className="interview-progress">
+                    {interviewRounds.map((_, index) => (
+                        <div key={index} className="progress-step">
+                            <span className={`progress-indicator ${index < currentRound ? 'completed' :
+                                index === currentRound ? 'active' : ''
+                                }`}>
+                                {index + 1}
+                            </span>
+                            <span>Round {index + 1}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="current-round">
+                    <h3>{currentRoundData[0].type} Round</h3>
+                    <div className="question-progress">
+                        Question {currentQuestion + 1} of {totalQuestionsInRound}
                     </div>
-                ))}
-            </div>
-        ));
+                    <div className="current-question">
+                        {currentRoundData[currentQuestion]?.question || 'No question available'}
+                    </div>
+                </div>
+            </>
+        );
     };
 
     const saveInterviewFeedback = async () => {
@@ -227,23 +204,11 @@ const AIMockInterview = () => {
             console.warn('SpeechRecognition is already running');
             return;
         }
-        if (!modelsLoaded) {
-            console.error('Models not loaded yet');
-            return;
-        }
-
-        // Check if we have questions available
-        if (!interviewRounds[currentRound] || !interviewRounds[currentRound][currentQuestion]) {
-            console.error('No questions available');
-            setFetchError('No questions available. Please try again.');
-            return;
-        }
 
         try {
             await startCamera();
             setCameraActive(true);
-            setIsListening(true);
-            recognition.current.start();
+            // Don't start recognition here, it will be started after question is spoken
             startTimer();
             const currentQuestionText = interviewRounds[currentRound][currentQuestion].question;
             speakQuestion(currentQuestionText);
@@ -257,13 +222,33 @@ const AIMockInterview = () => {
     };
 
     const stopInterview = () => {
-        if (recognition.current) recognition.current.stop();
-        setIsListening(false);
-        stopCamera();
-        setCameraActive(false);
-        clearInterval(timerRef.current);
-        saveInterviewFeedback();
-        setInterviewComplete(true);
+        try {
+            // Stop speech recognition
+            if (recognition.current) {
+                recognition.current.stop();
+                setIsListening(false);
+            }
+
+            // Stop camera
+            if (videoRef.current && videoRef.current.srcObject) {
+                const tracks = videoRef.current.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                videoRef.current.srcObject = null;
+            }
+            setCameraActive(false);
+
+            // Clear timer
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+
+            // Save feedback and complete interview
+            saveInterviewFeedback();
+            setInterviewComplete(true);
+        } catch (error) {
+            console.error('Error stopping interview:', error);
+        }
     };
 
     const startNewInterview = () => {
@@ -341,31 +326,27 @@ const AIMockInterview = () => {
     };
 
     const nextQuestion = () => {
-        if (!interviewRounds.length) {
-            console.error('No interview rounds available');
-            return;
-        }
+        if (!interviewRounds.length) return;
 
         const currentRoundQuestions = interviewRounds[currentRound];
-        if (!currentRoundQuestions) {
-            console.error('Current round not found');
-            return;
-        }
+        if (!currentRoundQuestions) return;
 
         if (currentQuestion < currentRoundQuestions.length - 1) {
             setCurrentQuestion(prev => prev + 1);
-            setTranscript('');
-            setCode('');
-            const nextQuestion = currentRoundQuestions[currentQuestion + 1];
-            setShowCodeEditor(nextQuestion?.requiresCode || false);
+            resetQuestionState();
         } else if (currentRound < interviewRounds.length - 1) {
             setCurrentRound(prev => prev + 1);
             setCurrentQuestion(0);
-            const nextRoundQuestions = interviewRounds[currentRound + 1];
-            setShowCodeEditor(nextRoundQuestions[0]?.requiresCode || false);
+            resetQuestionState();
         } else {
             stopInterview();
         }
+    };
+
+    const resetQuestionState = () => {
+        setTranscript('');
+        setCode('');
+        setShowCodeEditor(interviewRounds[currentRound]?.[currentQuestion]?.requiresCode || false);
     };
 
     const startCamera = async () => {
@@ -382,8 +363,11 @@ const AIMockInterview = () => {
 
     const stopCamera = () => {
         if (videoRef.current && videoRef.current.srcObject) {
-            videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+            const tracks = videoRef.current.srcObject.getTracks();
+            tracks.forEach((track) => track.stop());
+            videoRef.current.srcObject = null;
         }
+        setCameraActive(false);
     };
 
     const startTimer = () => {
@@ -437,9 +421,14 @@ const AIMockInterview = () => {
 
     const startRecordingAfterDelay = () => {
         setTimeout(() => {
-            if (!isListening) {
-                recognition.current.start();
-                setIsListening(true);
+            try {
+                if (!isListening && recognition.current) {
+                    recognition.current.start();
+                    setIsListening(true);
+                }
+            } catch (error) {
+                console.error('Error starting speech recognition:', error);
+                setSpeechRecognitionError('Failed to start speech recognition');
             }
         }, 5000);
     };
@@ -457,21 +446,42 @@ const AIMockInterview = () => {
     };
 
     const handleStopRecording = () => {
-        if (!recognition.current) return;
+        try {
+            if (recognition.current && isListening) {
+                recognition.current.stop();
+                setIsListening(false);
 
-        recognition.current.stop();
-        setIsListening(false);
+                const currentQuestionText = interviewRounds[currentRound]?.[currentQuestion]?.question;
+                if (currentQuestionText) {
+                    setAnswers(prev => [...prev, {
+                        question: currentQuestionText,
+                        answer: transcript
+                    }]);
+                }
 
-        const currentQuestionText = interviewRounds[currentRound]?.[currentQuestion]?.question;
-        if (currentQuestionText) {
-            setAnswers(prev => [...prev, {
-                question: currentQuestionText,
-                answer: transcript
-            }]);
+                // Load next question after stopping recording
+                nextQuestion();
+            }
+        } catch (error) {
+            console.error('Error stopping recording:', error);
         }
-
-        nextQuestion();
     };
+
+    useEffect(() => {
+        return () => {
+            // Cleanup on component unmount
+            if (recognition.current) {
+                recognition.current.stop();
+            }
+            if (videoRef.current?.srcObject) {
+                const tracks = videoRef.current.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
+    }, []);
 
     return (
         <div className="aimockinterview-container">
@@ -490,7 +500,6 @@ const AIMockInterview = () => {
                                 <div className="video-container">
                                     <video ref={videoRef} autoPlay playsInline muted className="video" />
                                 </div>
-
                                 {renderInterviewControls()}
                             </div>
 
@@ -499,12 +508,28 @@ const AIMockInterview = () => {
                                     <div>Loading questions...</div>
                                 ) : (
                                     <>
-                                        <div className="question-container">
-                                            <h3 className="question-title">Current Question:</h3>
-                                            <p>
+                                        <div className="interview-progress">
+                                            {interviewRounds.map((_, index) => (
+                                                <div key={index} className="progress-step">
+                                                    <span className={`progress-indicator ${index < currentRound ? 'completed' :
+                                                        index === currentRound ? 'active' : ''
+                                                        }`}>
+                                                        {index + 1}
+                                                    </span>
+                                                    <span>Round {index + 1}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="current-round-info">
+                                            <h3>{interviewRounds[currentRound]?.[0]?.type || 'Interview'} Round</h3>
+                                            <div className="question-progress">
+                                                Question {currentQuestion + 1} of {interviewRounds[currentRound]?.length || 0}
+                                            </div>
+                                            <div className="current-question">
                                                 {interviewRounds[currentRound]?.[currentQuestion]?.question ||
                                                     'No question available'}
-                                            </p>
+                                            </div>
                                         </div>
 
                                         {showCodeEditor && (
@@ -515,7 +540,9 @@ const AIMockInterview = () => {
                                                     value={code}
                                                     onChange={(value) => setCode(value)}
                                                 />
-                                                <button className="button" onClick={analyzeCode}>Analyze Code</button>
+                                                <button className="button" onClick={analyzeCode}>
+                                                    Analyze Code
+                                                </button>
                                             </div>
                                         )}
 

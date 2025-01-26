@@ -63,7 +63,7 @@
 
 @media (min-width: 768px) {
     .aimockinterview-container .grid {
-        grid-template-columns: 45% 55%;
+        grid-template-columns: 40% 60%;
     }
 }
 
@@ -94,25 +94,23 @@
 
 .aimockinterview-container .button-group {
     display: flex;
-    gap: 12px;
-    margin-top: 16px;
+    gap: 1rem;
+    margin-top: 2rem;
 }
 
 .aimockinterview-container .button {
     flex: 1;
-    padding: 12px 24px;
-    font-size: 1.1em;
-    font-weight: 600;
-    border: none;
+    padding: 1rem 2rem;
     border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
 }
 
 .aimockinterview-container .button.start {
-    background-color: #2ecc71;
+    background: #28a745;
+    color: white;
 }
 
 .aimockinterview-container .button.start:hover {
@@ -120,7 +118,8 @@
 }
 
 .aimockinterview-container .button.stop {
-    background-color: #e74c3c;
+    background: #dc3545;
+    color: white;
 }
 
 .aimockinterview-container .button.stop:hover {
@@ -137,9 +136,11 @@
 }
 
 .aimockinterview-container .question-title {
-    color: #2c3e50;
-    font-size: 1.3em;
-    margin-bottom: 12px;
+    color: #343a40;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
 }
 
 .aimockinterview-container .code-editor-container {
@@ -158,6 +159,14 @@
     color: #856404;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     margin-top: 16px;
+    margin: 0;
+    border-bottom: 1px solid #f8f9fa;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.aimockinterview-container .alert:hover {
+    background: #f8f9fa;
 }
 
 .aimockinterview-container .alert-description {
@@ -171,17 +180,19 @@
 }
 
 .aimockinterview-container .timer-container {
-    background-color: #e9ecef;
-    padding: 16px;
-    border-radius: 8px;
-    text-align: center;
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #007bff;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .aimockinterview-container .timer {
-    font-size: 1.5em;
-    color: #2c3e50;
-    font-weight: bold;
     margin: 0;
+    font-size: 1.2rem;
 }
 
 .aimockinterview-container .right-column {
@@ -202,4 +213,162 @@
 .aimockinterview-container .right-column::-webkit-scrollbar-thumb {
     background-color: #007bff;
     border-radius: 4px;
+}
+
+/* New/Updated Styles */
+.company-selection {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.company-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.company-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: white;
+    border: 2px solid #e1e1e1;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.company-button:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    border-color: #007bff;
+}
+
+.company-button .icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+
+/* Interview Progress Styles */
+.interview-progress {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.progress-step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.progress-indicator {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #495057;
+}
+
+.progress-indicator.active {
+    background: #007bff;
+    color: white;
+}
+
+.progress-indicator.completed {
+    background: #28a745;
+    color: white;
+}
+
+/* Current Question Styles */
+.question-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+/* Feedback Container Updates */
+.feedback-container {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Control Button Updates */
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.button {
+    flex: 1;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.button.start {
+    background: #28a745;
+    color: white;
+}
+
+.button.stop {
+    background: #dc3545;
+    color: white;
+}
+
+.current-round-info {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.current-round-info h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.question-progress {
+    color: #6c757d;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.current-question {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #2c3e50;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.interview-progress {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
 }
