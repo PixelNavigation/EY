@@ -117,11 +117,6 @@ const AIMockInterview = () => {
         }
     };
 
-    const selectCompany = (company) => {
-        setSelectedCompany(company);
-        fetchCompanyInterviewRounds(company);
-    };
-
     const renderCompanySelection = () => {
         return (
             <div className="company-selection">
@@ -143,43 +138,6 @@ const AIMockInterview = () => {
                 </div>
                 {fetchError && <div className="error-message">{fetchError}</div>}
             </div>
-        );
-    };
-
-    const renderInterviewRounds = () => {
-        if (!interviewRounds.length) return null;
-
-        // Only show current round and question
-        const currentRoundData = interviewRounds[currentRound];
-        if (!currentRoundData) return null;
-
-        const totalRounds = interviewRounds.length;
-        const totalQuestionsInRound = currentRoundData.length;
-
-        return (
-            <>
-                <div className="interview-progress">
-                    {interviewRounds.map((_, index) => (
-                        <div key={index} className="progress-step">
-                            <span className={`progress-indicator ${index < currentRound ? 'completed' :
-                                index === currentRound ? 'active' : ''
-                                }`}>
-                                {index + 1}
-                            </span>
-                            <span>Round {index + 1}</span>
-                        </div>
-                    ))}
-                </div>
-                <div className="current-round">
-                    <h3>{currentRoundData[0].type} Round</h3>
-                    <div className="question-progress">
-                        Question {currentQuestion + 1} of {totalQuestionsInRound}
-                    </div>
-                    <div className="current-question">
-                        {currentRoundData[currentQuestion]?.question || 'No question available'}
-                    </div>
-                </div>
-            </>
         );
     };
 
@@ -208,7 +166,6 @@ const AIMockInterview = () => {
         try {
             await startCamera();
             setCameraActive(true);
-            // Don't start recognition here, it will be started after question is spoken
             startTimer();
             const currentQuestionText = interviewRounds[currentRound][currentQuestion].question;
             speakQuestion(currentQuestionText);
@@ -223,13 +180,10 @@ const AIMockInterview = () => {
 
     const stopInterview = () => {
         try {
-            // Stop speech recognition
             if (recognition.current) {
                 recognition.current.stop();
                 setIsListening(false);
             }
-
-            // Stop camera
             if (videoRef.current && videoRef.current.srcObject) {
                 const tracks = videoRef.current.srcObject.getTracks();
                 tracks.forEach(track => track.stop());
@@ -237,13 +191,10 @@ const AIMockInterview = () => {
             }
             setCameraActive(false);
 
-            // Clear timer
             if (timerRef.current) {
                 clearInterval(timerRef.current);
                 timerRef.current = null;
             }
-
-            // Save feedback and complete interview
             saveInterviewFeedback();
             setInterviewComplete(true);
         } catch (error) {
@@ -458,8 +409,6 @@ const AIMockInterview = () => {
                         answer: transcript
                     }]);
                 }
-
-                // Load next question after stopping recording
                 nextQuestion();
             }
         } catch (error) {
@@ -469,7 +418,6 @@ const AIMockInterview = () => {
 
     useEffect(() => {
         return () => {
-            // Cleanup on component unmount
             if (recognition.current) {
                 recognition.current.stop();
             }
